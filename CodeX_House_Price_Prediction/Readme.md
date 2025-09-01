@@ -239,10 +239,6 @@ The model generates several visualizations:
 - Create web interface with Flask/Streamlit
 - Add support for time series price prediction
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - **Kaggle** for providing excellent datasets
