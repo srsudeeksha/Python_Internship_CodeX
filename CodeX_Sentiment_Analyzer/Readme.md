@@ -367,5 +367,5 @@ The application is fully responsive and works on:
 
 ---
 
-**Built with ❤️ using Flask and TextBlob**
+⭐ **Star this repository if you found it helpful!** ⭐
 
