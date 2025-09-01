@@ -1,4 +1,4 @@
-# CodeX Internship Projects
+# Python_Internship_CodeX
 
 ## Overview
 This repository contains three machine learning and AI projects developed during my internship at CodeX. These projects demonstrate practical applications of data science, natural language processing, and voice recognition technologies.
