@@ -262,4 +262,3 @@ The model generates several visualizations:
 
 ⭐ **Star this repository if you found it helpful!**
 
-*Happy house price predicting! 🏡📊*
