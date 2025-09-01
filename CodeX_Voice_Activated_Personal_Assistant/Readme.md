@@ -468,8 +468,6 @@ pip install -r requirements-dev.txt
 - Performance optimizations
 - Language support
 
-```
-
 ## 🙏 Acknowledgments
 
 - **Speech Recognition**: Google Speech Recognition API
