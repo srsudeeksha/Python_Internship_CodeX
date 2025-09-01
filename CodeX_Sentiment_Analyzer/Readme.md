@@ -1,4 +1,4 @@
-# 🧠 Flask Sentiment Analysis Web Application
+# 🧠 Sentiment Analysis Web Application
 
 A comprehensive web application for sentiment analysis using TextBlob and Flask. Analyze the emotional tone of text with advanced natural language processing, batch file processing, and detailed analytics.
 
@@ -360,8 +360,12 @@ The application is fully responsive and works on:
 - Enhanced visualization options
 - Custom sentiment model integration
 
+## 📞 Contact
+
+- **Sudeeksha** - srsudeeksha@gmail.com
+- **Project Link**: https://github.com/srsudeeksha/Python_Internship_CodeX/tree/main/CodeX_Sentiment_Analyzer
+
 ---
 
 **Built with ❤️ using Flask and TextBlob**
 
-*Last updated: August 2024*
