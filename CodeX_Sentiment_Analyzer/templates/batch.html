@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Analysis - Sentiment Analysis App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-upload"></i> Batch Sentiment Analysis</h1>
+        <p class="lead">Upload a file to analyze multiple texts at once and get comprehensive results.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-lg">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-file-upload"></i> Upload Your File</h4>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Select file to analyze:</label>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".txt,.csv" required>
+                            <label class="input-group-text" for="file">
+                                <i class="fas fa-file"></i>
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            Supported formats: TXT, CSV (max 16MB)
+                        </div>
+                    </div>
+                    
+                    <div id="filePreview" class="mb-3" style="display: none;">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-info-circle"></i> File Information</h6>
+                                <div id="fileInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Upload and Analyze
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="text-center mb-4">How Batch Analysis Works</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt"></i> TXT Files</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Format Requirements:</strong></p>
+                <ul>
+                    <li>Plain text format (.txt)</li>
+                    <li>One text per line or paragraph</li>
+                    <li>Each text should be at least 10 characters</li>
+                    <li>Maximum 50 texts will be processed</li>
+                </ul>
+                
+                <p><strong>Example content:</strong></p>
+                <div class="bg-light p-2 rounded font-monospace small">
+                    I love this product!<br>
+                    The service was terrible.<br>
+                    This is an okay experience.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-table"></i> CSV Files</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Format Requirements:</strong></p>
+                <ul>
+                    <li>Comma-separated values (.csv)</li>
+                    <li>Text column will be auto-detected</li>
+                    <li>Columns with avg length > 20 chars are considered text</li>
+                    <li>Maximum 100 rows will be processed</li>
+                </ul>
+                
+                <p><strong>Example structure:</strong></p>
+                <div class="bg-light p-2 rounded font-monospace small">
+                    review,rating<br>
+                    "Great product, love it!",5<br>
+                    "Not what I expected.",2
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> What You'll Get</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-list fa-2x text-primary mb-2"></i>
+                        <h6>Detailed Results Table</h6>
+                        <small class="text-muted">Individual analysis for each text with sentiment, polarity, and confidence scores</small>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-chart-pie fa-2x text-success mb-2"></i>
+                        <h6>Summary Statistics</h6>
+                        <small class="text-muted">Overall sentiment distribution, average scores, and key metrics</small>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-download fa-2x text-warning mb-2"></i>
+                        <h6>Exportable Data</h6>
+                        <small class="text-muted">Results saved to your history for future reference and analysis</small>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <i class="fas fa-filter fa-2x text-info mb-2"></i>
+                        <h6>Smart Processing</h6>
+                        <small class="text-muted">Automatic language detection and key phrase extraction</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Important Notes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><strong>File Limitations:</strong></h6>
+                        <ul>
+                            <li>Maximum file size: 16MB</li>
+                            <li>TXT files: max 50 texts processed</li>
+                            <li>CSV files: max 100 rows processed</li>
+                            <li>Text must be at least 10 characters</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><strong>Processing Tips:</strong></h6>
+                        <ul>
+                            <li>Ensure text is in UTF-8 encoding</li>
+                            <li>Remove any personal information</li>
+                            <li>Processing time depends on file size</li>
+                            <li>Results are automatically saved to history</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Single Text Analysis
+            </a>
+            <a href="{{ url_for('history') }}" class="btn btn-info">
+                <i class="fas fa-history"></i> View History
+            </a>
+            <a href="{{ url_for('stats') }}" class="btn btn-warning">
+                <i class="fas fa-chart-line"></i> Statistics
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Processing Your File...</h5>
+                <p class="text-muted mb-0">This may take a few moments depending on file size.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file');
+    const filePreview = document.getElementById('filePreview');
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Validate file type
+            const allowedTypes = ['text/plain', 'text/csv', 'application/csv'];
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            
+            if (!allowedTypes.includes(file.type) && !['txt', 'csv'].includes(fileExtension)) {
+                alert('Please select a valid TXT or CSV file.');
+                fileInput.value = '';
+                filePreview.style.display = 'none';
+                return;
+            }
+            
+            // Validate file size (16MB limit)
+            if (file.size > 16 * 1024 * 1024) {
+                alert('File is too large. Maximum size is 16MB.');
+                fileInput.value = '';
+                filePreview.style.display = 'none';
+                return;
+            }
+            
+            // Show file information
+            const fileSizeKB = (file.size / 1024).toFixed(1);
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const displaySize = file.size > 1024 * 1024 ? fileSizeMB + ' MB' : fileSizeKB + ' KB';
+            
+            fileInfo.innerHTML = `
+                <div class="row">
+                    <div class="col-sm-6">
+                        <strong>Name:</strong> ${file.name}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Size:</strong> ${displaySize}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-6">
+                        <strong>Type:</strong> ${fileExtension.toUpperCase()}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Modified:</strong> ${new Date(file.lastModified).toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+            
+            filePreview.style.display = 'block';
+        } else {
+            filePreview.style.display = 'none';
+        }
+    });
+    
+    // Form submit handler
+    uploadForm.addEventListener('submit', function(e) {
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            e.preventDefault();
+            alert('Please select a file to upload.');
+            return;
+        }
+        
+        // Show loading modal
+        loadingModal.show();
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    });
+    
+    // Drag and drop functionality
+    const dropZone = document.querySelector('.card-body');
+    
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('bg-light');
+    });
+    
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('bg-light');
+    });
+    
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('bg-light');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+});
+</script>
+{% endblock %}

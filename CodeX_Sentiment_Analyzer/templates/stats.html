@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics - Sentiment Analysis App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-chart-bar"></i> Analysis Statistics</h1>
+        <p class="lead">Overview of your sentiment analysis history and trends.</p>
+    </div>
+</div>
+
+{% if total_count > 0 %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card text-center">
+            <div class="card-body">
+                <h2>{{ total_count }}</h2>
+                <p class="mb-0">Total Analyses</p>
+            </div>
+        </div>
+    </div>
+    {% for stat in sentiment_stats %}
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="sentiment-{{ stat.sentiment.lower() }}">{{ stat.sentiment_count }}</h2>
+                <p class="mb-0">{{ stat.sentiment }}</p>
+                <small class="text-muted">Avg: {{ "%.3f"|format(stat.avg_polarity) }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if sentiment_stats %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Sentiment Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sentiment</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Avg Polarity</th>
+                                <th>Avg Subjectivity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in sentiment_stats %}
+                            <tr>
+                                <td>
+                                    <span class="badge sentiment-{{ stat.sentiment.lower() }}">
+                                        {{ stat.sentiment }}
+                                    </span>
+                                </td>
+                                <td>{{ stat.sentiment_count }}</td>
+                                <td>{{ "%.1f"|format((stat.sentiment_count / total_count) * 100) }}%</td>
+                                <td>{{ "%.4f"|format(stat.avg_polarity) }}</td>
+                                <td>{{ "%.4f"|format(stat.avg_subjectivity) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if daily_stats %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Activity (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Analyses</th>
+                                <th>Avg Polarity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in daily_stats %}
+                            <tr>
+                                <td>{{ stat.date }}</td>
+                                <td>{{ stat.daily_count }}</td>
+                                <td>{{ "%.4f"|format(stat.daily_avg_polarity) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-chart-bar fa-5x text-muted mb-3"></i>
+            <h3 class="text-muted">No Statistics Available</h3>
+            <p class="text-muted">Start analyzing texts to see statistics here.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Start Analyzing
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

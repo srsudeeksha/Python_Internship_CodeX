@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis History - Sentiment Analysis App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-history"></i> Analysis History</h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Analysis
+                </a>
+                <a href="{{ url_for('stats') }}" class="btn btn-info">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </a>
+                {% if history %}
+                <form method="POST" action="{{ url_for('clear_history') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" 
+                            onclick="return confirm('Are you sure you want to clear all history? This cannot be undone.')">
+                        <i class="fas fa-trash"></i> Clear History
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if history %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> History Overview</h5>
+            <p class="mb-0">
+                Showing {{ history|length }} most recent analyses. 
+                {% set positive_count = history | selectattr('sentiment', 'equalto', 'Positive') | list | length %}
+                {% set negative_count = history | selectattr('sentiment', 'equalto', 'Negative') | list | length %}
+                {% set neutral_count = history | selectattr('sentiment', 'equalto', 'Neutral') | list | length %}
+                <strong>{{ positive_count }}</strong> positive, 
+                <strong>{{ negative_count }}</strong> negative, 
+                <strong>{{ neutral_count }}</strong> neutral.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% if chart_url %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> History Trends</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="chart-container">
+                    <img src="data:image/png;base64,{{ chart_url }}" class="img-fluid" alt="History Analysis Chart">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Filters -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-filter"></i> Filter Results</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <select id="sentimentFilter" class="form-select">
+                            <option value="">All Sentiments</option>
+                            <option value="Positive">Positive Only</option>
+                            <option value="Negative">Negative Only</option>
+                            <option value="Neutral">Neutral Only</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select id="confidenceFilter" class="form-select">
+                            <option value="">All Confidence</option>
+                            <option value="High">High Confidence</option>
+                            <option value="Medium">Medium Confidence</option>
+                            <option value="Low">Low Confidence</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <input type="text" id="searchText" class="form-control" placeholder="Search text...">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button id="clearFilters" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-eraser"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Analysis Records</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="historyTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Text Preview</th>
+                                <th style="width: 120px;">Sentiment</th>
+                                <th style="width: 100px;">Polarity</th>
+                                <th style="width: 120px;">Subjectivity</th>
+                                <th style="width: 80px;">Words</th>
+                                <th style="width: 120px;">Confidence</th>
+                                <th style="width: 100px;">Language</th>
+                                <th style="width: 140px;">Date</th>
+                                <th style="width: 100px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in history %}
+                            <tr data-sentiment="{{ item.sentiment }}" data-confidence="{{ item.confidence }}">
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 300px;" title="{{ item.text }}">
+                                        {{ item.text[:100] }}{% if item.text|length > 100 %}...{% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge sentiment-{{ item.sentiment.lower() }}">
+                                        <i class="fas fa-{{ 'smile' if item.sentiment == 'Positive' else 'frown' if item.sentiment == 'Negative' else 'meh' }}"></i>
+                                        {{ item.sentiment }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if item.polarity > 0 else 'danger' if item.polarity < 0 else 'secondary' }}">
+                                        {{ item.polarity }}
+                                    </span>
+                                </td>
+                                <td>{{ item.subjectivity }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ item.word_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge confidence-{{ item.confidence.lower() }} text-dark">
+                                        {{ item.confidence }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ item.detected_language.upper() if item.detected_language else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ item.timestamp[:19] if item.timestamp else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-info view-details" 
+                                                data-text="{{ item.text|e }}"
+                                                data-sentiment="{{ item.sentiment }}"
+                                                data-polarity="{{ item.polarity }}"
+                                                data-subjectivity="{{ item.subjectivity }}"
+                                                data-confidence="{{ item.confidence }}"
+                                                data-words="{{ item.word_count }}"
+                                                data-sentences="{{ item.sentence_count }}"
+                                                data-language="{{ item.detected_language }}"
+                                                data-timestamp="{{ item.timestamp }}"
+                                                title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Analysis Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-history fa-5x text-muted mb-3"></i>
+            <h3 class="text-muted">No Analysis History</h3>
+            <p class="text-muted">You haven't performed any sentiment analyses yet. Start analyzing texts to see your history here.</p>
+            <div class="btn-group mt-3" role="group">
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-edit"></i> Start Single Analysis
+                </a>
+                <a href="{{ url_for('batch_analysis') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-upload"></i> Start Batch Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if history %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sentimentFilter = document.getElementById('sentimentFilter');
+    const confidenceFilter = document.getElementById('confidenceFilter');
+    const searchText = document.getElementById('searchText');
+    const clearFilters = document.getElementById('clearFilters');
+    const table = document.getElementById('historyTable');
+    const tbody = table.querySelector('tbody');
+    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    
+    // Store original rows
+    const originalRows = Array.from(tbody.querySelectorAll('tr'));
+    
+    // Filter function
+    function filterTable() {
+        const sentimentValue = sentimentFilter.value.toLowerCase();
+        const confidenceValue = confidenceFilter.value.toLowerCase();
+        const searchValue = searchText.value.toLowerCase();
+        
+        originalRows.forEach(row => {
+            const sentiment = row.dataset.sentiment.toLowerCase();
+            const confidence = row.dataset.confidence.toLowerCase();
+            const text = row.cells[1].textContent.toLowerCase();
+            
+            const sentimentMatch = !sentimentValue || sentiment === sentimentValue;
+            const confidenceMatch = !confidenceValue || confidence === confidenceValue;
+            const textMatch = !searchValue || text.includes(searchValue);
+            
+            if (sentimentMatch && confidenceMatch && textMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Update row numbers
+        let visibleIndex = 1;
+        originalRows.forEach(row => {
+            if (row.style.display !== 'none') {
+                row.cells[0].textContent = visibleIndex++;
+            }
+        });
+    }
+    
+    // Event listeners for filters
+    sentimentFilter.addEventListener('change', filterTable);
+    confidenceFilter.addEventListener('change', filterTable);
+    searchText.addEventListener('input', filterTable);
+    
+    // Clear filters
+    clearFilters.addEventListener('click', function() {
+        sentimentFilter.value = '';
+        confidenceFilter.value = '';
+        searchText.value = '';
+        filterTable();
+    });
+    
+    // View details buttons
+    document.querySelectorAll('.view-details').forEach(button => {
+        button.addEventListener('click', function() {
+            const data = this.dataset;
+            
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h6>Text Content:</h6>
+                        <div class="border p-3 rounded bg-light">
+                            ${data.text}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h2 class="sentiment-${data.sentiment.toLowerCase()} mb-3">
+                                    <i class="fas fa-${data.sentiment === 'Positive' ? 'smile' : data.sentiment === 'Negative' ? 'frown' : 'meh'}"></i>
+                                    ${data.sentiment}
+                                </h2>
+                                <span class="badge confidence-${data.confidence.toLowerCase()} text-dark fs-6 p-2">
+                                    ${data.confidence} Confidence
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card bg-light text-center">
+                                    <div class="card-body">
+                                        <h4 class="text-primary">${data.polarity}</h4>
+                                        <small>Polarity</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card bg-light text-center">
+                                    <div class="card-body">
+                                        <h4 class="text-info">${data.subjectivity}</h4>
+                                        <small>Subjectivity</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <h5 class="text-primary">${data.words}</h5>
+                        <small>Words</small>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h5 class="text-success">${data.sentences}</h5>
+                        <small>Sentences</small>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h5 class="text-warning">${data.language ? data.language.toUpperCase() : 'N/A'}</h5>
+                        <small>Language</small>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> Analyzed: ${data.timestamp || 'N/A'}
+                        </small>
+                    </div>
+                </div>
+            `;
+            
+            detailsModal.show();
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

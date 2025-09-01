@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Analysis Results - Sentiment Analysis App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-line"></i> Batch Analysis Results</h1>
+            <a href="{{ url_for('batch_analysis') }}" class="btn btn-primary">
+                <i class="fas fa-upload"></i> New Batch Analysis
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-success">
+            <h5><i class="fas fa-check-circle"></i> Analysis Complete!</h5>
+            <p class="mb-0">Successfully analyzed {{ results|length }} text(s) from your uploaded file.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Analysis Results</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Text Preview</th>
+                                <th>Sentiment</th>
+                                <th>Polarity</th>
+                                <th>Subjectivity</th>
+                                <th>Words</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <div style="max-width: 300px;">
+                                        {{ result.text[:80] }}{% if result.text|length > 80 %}...{% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge sentiment-{{ result.sentiment.lower() }}">
+                                        {{ result.sentiment }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if result.polarity > 0 else 'danger' if result.polarity < 0 else 'secondary' }}">
+                                        {{ result.polarity }}
+                                    </span>
+                                </td>
+                                <td>{{ result.subjectivity }}</td>
+                                <td>{{ result.word_count }}</td>
+                                <td>
+                                    <span class="badge confidence-{{ result.confidence.lower() }} text-dark">
+                                        {{ result.confidence }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Summary Statistics</h5>
+            </div>
+            <div class="card-body">
+                {% set positive_count = results | selectattr('sentiment', 'equalto', 'Positive') | list | length %}
+                {% set negative_count = results | selectattr('sentiment', 'equalto', 'Negative') | list | length %}
+                {% set neutral_count = results | selectattr('sentiment', 'equalto', 'Neutral') | list | length %}
+                {% set avg_polarity = (results | sum(attribute='polarity')) / results|length %}
+                {% set avg_subjectivity = (results | sum(attribute='subjectivity')) / results|length %}
+                
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <h4 class="text-success">{{ positive_count }}</h4>
+                        <small>Positive</small>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 class="text-danger">{{ negative_count }}</h4>
+                        <small>Negative</small>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 class="text-secondary">{{ neutral_count }}</h4>
+                        <small>Neutral</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-info">{{ "%.3f"|format(avg_polarity) }}</h4>
+                        <small>Avg Polarity</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-warning">{{ "%.3f"|format(avg_subjectivity) }}</h4>
+                        <small>Avg Subjectivity</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
